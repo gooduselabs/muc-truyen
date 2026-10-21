@@ -5,18 +5,20 @@ import { useEffect, useState } from 'react';
 import * as DM from '@radix-ui/react-dropdown-menu';
 import { Bell, Coins, LogOut, Moon, PenLine, Search, Shield, Sun, User, Wallet, Library, Rss } from 'lucide-react';
 import { Logo } from './logo';
+import { InkDivider, Lantern } from './brand';
 import { Button } from './ui/button';
 import { useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { cn, fmt } from '@/lib/utils';
+import { AnimatePresence, motion } from 'framer-motion';
+import { switchTheme } from './motion';
 
 export function useTheme() {
   const [dark, setDark] = useState(false);
   useEffect(() => { setDark(document.documentElement.classList.contains('dark')); }, []);
-  const toggle = () => {
+  const toggle = (e?: { clientX: number; clientY: number }) => {
     const d = !dark; setDark(d);
-    document.documentElement.classList.toggle('dark', d);
-    localStorage.setItem('muc_theme', d ? 'dark' : 'light');
+    switchTheme(d ? 'dark' : 'light', e ? { x: e.clientX, y: e.clientY } : undefined);
   };
   return { dark, toggle };
 }
@@ -37,12 +39,15 @@ export function Header() {
   if (path.match(/^\/truyen\/[^/]+\/\d+/) || path.startsWith('/studio/chuong')) return null; // reader & editor have their own chrome
 
   return (
-    <header className="glass sticky top-0 z-40 border-b border-line">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-6 px-4 md:px-6">
+    <header className="glass sticky top-0 z-40 border-b border-line/80">
+      <div className="mx-auto flex h-[68px] max-w-7xl items-center gap-6 px-4 md:px-6">
         <Logo />
         <nav className="hidden items-center gap-1 lg:flex">
           {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className={cn('rounded-full px-3.5 py-2 text-sm font-medium text-muted transition hover:text-fg', path === n.href && 'bg-bg-soft text-fg')}>{n.label}</Link>
+            <Link key={n.href} href={n.href} className={cn('relative whitespace-nowrap rounded-full px-3 py-2 text-sm font-medium text-muted transition hover:text-fg', path === n.href && 'text-fg')}>
+              {path === n.href && <motion.span layoutId="nav-ink" className="absolute inset-x-3 -bottom-0.5 h-[3px] rounded-full bg-brand" style={{ borderRadius: '40% 60% 50% 50%' }} />}
+              {n.label}
+            </Link>
           ))}
         </nav>
         <form className="relative ml-auto hidden w-72 md:block" onSubmit={(e) => { e.preventDefault(); router.push(`/kham-pha?q=${encodeURIComponent(q)}`); }}>
@@ -51,8 +56,12 @@ export function Header() {
             className="h-10 w-full rounded-full border border-line bg-card pl-10 pr-4 text-sm outline-none transition focus:border-brand focus:ring-4 focus:ring-[var(--ring)]" />
         </form>
         <div className="ml-auto flex items-center gap-1.5 md:ml-0">
-          <button onClick={toggle} className="grid size-10 place-items-center rounded-full text-muted transition hover:bg-bg-soft hover:text-fg" aria-label="Đổi giao diện">
-            {dark ? <Sun className="size-[18px]" /> : <Moon className="size-[18px]" />}
+          <button onClick={(e) => toggle(e)} className="grid size-10 place-items-center overflow-hidden rounded-full text-muted transition hover:bg-bg-soft hover:text-fg" aria-label="Đổi giao diện">
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.span key={dark ? 'sun' : 'moon'} initial={{ y: 18, rotate: -90, opacity: 0 }} animate={{ y: 0, rotate: 0, opacity: 1 }} exit={{ y: -18, rotate: 90, opacity: 0 }}>
+                {dark ? <Sun className="size-[18px] text-gold" /> : <Moon className="size-[18px]" />}
+              </motion.span>
+            </AnimatePresence>
           </button>
           {me ? (
             <>
@@ -107,7 +116,9 @@ export function Footer() {
   const path = usePathname();
   if (path.match(/^\/truyen\/[^/]+\/\d+/) || path.startsWith('/studio/chuong')) return null;
   return (
-    <footer className="mt-24 border-t border-line">
+    <footer className="relative mt-24 overflow-hidden">
+      <InkDivider className="mx-auto max-w-7xl px-6" />
+      <Lantern className="pointer-events-none absolute -right-6 top-6 hidden h-56 opacity-80 md:block" />
       <div className="mx-auto grid max-w-7xl gap-8 px-6 py-12 md:grid-cols-4">
         <div className="md:col-span-2">
           <Logo />
