@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Burst, CoinCelebration, PageTurn } from '@/components/motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, Clock, Coins, Heart, Lock, MessageCircle, Minus, Plus, Settings2, Sparkles, Timer, Type } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -46,6 +47,8 @@ export function Reader({ slug, n }: { slug: string; n: number }) {
   const [para, setPara] = useState<number | null | 'chapter'>(null);
   const [progress, setProgress] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [hearts, setHearts] = useState(false);
+  const [celebrate, setCelebrate] = useState<string | null>(null);
   const readId = useRef<string | null>(null);
   const maxSeen = useRef(0);
 
@@ -95,7 +98,7 @@ export function Reader({ slug, n }: { slug: string; n: number }) {
     setBusy(true);
     try {
       await api(`/wallet/unlock/${data.chapter.id}`, { body: { mode } });
-      toast(mode === 'wait' ? 'Đã dùng vé chờ miễn phí 🎟️' : mode === 'rent' ? 'Đã thuê chương 48 giờ' : 'Đã mở khoá vĩnh viễn');
+      setCelebrate(mode === 'wait' ? 'Đã dùng vé chờ miễn phí' : mode === 'rent' ? 'Đã thuê chương 48 giờ' : 'Đã mở khoá vĩnh viễn');
       await Promise.all([load(), refresh()]);
     } catch (e: any) { toast(e.message, true); }
     setBusy(false);
@@ -104,6 +107,7 @@ export function Reader({ slug, n }: { slug: string; n: number }) {
     if (!me) return router.push('/dang-nhap');
     const r = await api(`/chapters/${data.chapter.id}/like`, { method: 'POST' });
     setData({ ...data, liked: r.liked, likes: data.likes + (r.liked ? 1 : -1) });
+    if (r.liked) { setHearts(true); setTimeout(() => setHearts(false), 900); }
   };
 
   const theme = `reader-${prefs.theme}`;
@@ -128,10 +132,13 @@ export function Reader({ slug, n }: { slug: string; n: number }) {
         </div>
       </header>
 
+      <CoinCelebration show={!!celebrate} label={celebrate || ''} onDone={() => setCelebrate(null)} />
+      <PageTurn turnKey={n}>
       <article className="mx-auto px-5 pb-16 pt-12 md:pt-20" style={{ maxWidth: prefs.width }}>
-        <div className="fade-up mb-12 text-center">
+        <div className="mb-12 text-center">
           <div className="text-xs font-bold uppercase tracking-[.3em]" style={{ color: 'var(--brand)' }}>Chương {chapter.number}</div>
-          <h1 className="mt-3 font-serif text-3xl font-bold leading-tight md:text-4xl">{chapter.title}</h1>
+          <h1 className="mt-3 font-display text-[34px] font-bold leading-tight md:text-[44px]">{chapter.title}</h1>
+          <div className="mx-auto mt-4 flex w-40 items-center gap-3" aria-hidden><span className="h-px flex-1" style={{ background: 'var(--r-line)' }} /><span className="size-2 rotate-45" style={{ background: 'var(--brand)' }} /><span className="h-px flex-1" style={{ background: 'var(--r-line)' }} /></div>
           <div className="mt-3 text-xs" style={{ color: 'var(--r-muted)' }}>{chapter.wordCount.toLocaleString('vi-VN')} chữ · {ago(chapter.publishedAt)} · ~{Math.max(1, Math.round(chapter.wordCount / 230))} phút đọc</div>
           <div className="mx-auto mt-6 h-px w-16" style={{ background: 'var(--brand)' }} />
         </div>
@@ -198,7 +205,7 @@ export function Reader({ slug, n }: { slug: string; n: number }) {
           <div className="mt-16 text-center">
             {access.reason === 'RENTAL' && <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-sky-500/10 px-4 py-2 text-xs font-semibold text-sky-600"><Clock className="size-3.5" />Đang thuê · hết hạn {new Date(access.expiresAt).toLocaleString('vi-VN')}</div>}
             <div className="flex items-center justify-center gap-3">
-              <Button variant="outline" onClick={like} className="!border-[var(--r-line)] !bg-transparent"><Heart className={cn(data.liked && 'fill-[var(--brand)] text-[var(--brand)]')} />{data.likes}</Button>
+              <span className="relative inline-flex"><Button variant="outline" onClick={like} className="!border-[var(--r-line)] !bg-transparent"><Heart className={cn('transition-transform', data.liked && 'scale-110 fill-[var(--brand)] text-[var(--brand)]')} />{data.likes}</Button><Burst show={hearts} onDone={() => {}} /></span>
               <Button variant="outline" onClick={() => setPara('chapter')} className="!border-[var(--r-line)] !bg-transparent"><MessageCircle />{commentCounts.chapter || 0} bình luận</Button>
             </div>
           </div>
@@ -214,6 +221,7 @@ export function Reader({ slug, n }: { slug: string; n: number }) {
             : <div className="rounded-2xl border p-4 text-right text-sm" style={{ borderColor: 'var(--r-line)', color: 'var(--r-muted)' }}><Sparkles className="ml-auto mb-1 size-4" />Bạn đã đọc tới chương mới nhất</div>}
         </nav>
       </article>
+      </PageTurn>
 
       <Dialog open={panel} onOpenChange={setPanel} title="Cài đặt đọc" side>
         <div className="space-y-7">

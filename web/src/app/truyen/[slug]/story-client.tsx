@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Burst, Tilt } from '@/components/motion';
 import { BookmarkPlus, BookmarkCheck, Clock, Coins, Gift, Heart, Lock, ListPlus, Star, Unlock, UserPlus, UserCheck, Play } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -31,10 +32,12 @@ export function StoryClient({ initial, recs }: { initial: any; recs: any[] }) {
     setS({ ...s, mine: { ...mine, inLibrary: r.inLibrary } });
     toast(r.inLibrary ? 'Đã thêm vào tủ sách' : 'Đã bỏ khỏi tủ sách');
   };
+  const [burst, setBurst] = useState(false);
   const like = async () => {
     if (need()) return;
     const r = await api(`/stories/${s.id}/like`, { method: 'POST' });
     setS({ ...s, _count: { ...s._count, likes: s._count.likes + (r.liked ? 1 : -1) }, mine: { ...mine, liked: r.liked } });
+    if (r.liked) { setBurst(true); setTimeout(() => setBurst(false), 900); }
   };
   const follow = async () => {
     if (need()) return;
@@ -49,7 +52,7 @@ export function StoryClient({ initial, recs }: { initial: any; recs: any[] }) {
       <section className="relative overflow-hidden border-b border-line">
         <div className="absolute inset-0 opacity-30 blur-3xl" style={{ background: `radial-gradient(circle at 20% 30%, var(--brand), transparent 50%), radial-gradient(circle at 80% 70%, var(--gold), transparent 50%)` }} />
         <div className="relative mx-auto grid max-w-6xl gap-10 px-6 py-12 md:grid-cols-[260px_1fr] md:py-16">
-          <div className="fade-up mx-auto w-52 md:w-full"><Cover title={s.title} seed={s.coverSeed} url={s.coverUrl} genre={s.genre} author={s.author.name} size="lg" /></div>
+          <div className="fade-up mx-auto w-52 md:w-full"><Tilt max={10}><Cover title={s.title} seed={s.coverSeed} url={s.coverUrl} genre={s.genre} author={s.author.name} size="lg" /></Tilt></div>
           <div className="fade-up">
             <div className="flex flex-wrap gap-2">
               <Badge className="border-brand/30 bg-brand-soft text-brand">{s.genre}</Badge>
@@ -57,7 +60,7 @@ export function StoryClient({ initial, recs }: { initial: any; recs: any[] }) {
               <Badge>{AGE_LABEL[s.ageRating]}</Badge>
               {s.waitFreeHours && <Badge className="border-gold/40 text-gold"><Clock className="size-3" />Chờ {s.waitFreeHours}h miễn phí</Badge>}
             </div>
-            <h1 className="mt-4 font-serif text-4xl font-bold leading-tight tracking-tight md:text-5xl">{s.title}</h1>
+            <h1 className="mt-4 font-display text-[42px] font-black leading-[1.05] tracking-tight md:text-[58px]">{s.title}</h1>
             <Link href={`/u/${s.author.username}`} className="mt-3 inline-flex items-center gap-2 text-sm text-muted hover:text-fg">
               <span className="grid size-7 place-items-center rounded-full bg-gradient-to-br from-brand to-gold text-xs font-bold text-white">{s.author.name[0]}</span>
               {s.author.name} · {fmt(s.authorFollowers)} người theo dõi
@@ -77,7 +80,7 @@ export function StoryClient({ initial, recs }: { initial: any; recs: any[] }) {
             <div className="mt-8 flex flex-wrap gap-3">
               {s.chapters.length > 0 && <Button size="lg" asChild><Link href={`/truyen/${s.slug}/${cont}`}><Play className="fill-current" />{mine?.progress ? `Đọc tiếp chương ${cont}` : 'Đọc từ đầu'}</Link></Button>}
               <Button size="lg" variant="outline" onClick={toggleLib}>{mine?.inLibrary ? <><BookmarkCheck className="text-brand" />Trong tủ sách</> : <><BookmarkPlus />Thêm vào tủ</>}</Button>
-              <Button size="icon" variant="outline" onClick={like} aria-label="Yêu thích" className="size-12"><Heart className={cn(mine?.liked && 'fill-brand text-brand')} /></Button>
+              <span className="relative inline-flex"><Button size="icon" variant="outline" onClick={like} aria-label="Yêu thích" className="size-12"><Heart className={cn('transition-transform', mine?.liked && 'scale-110 fill-brand text-brand')} /></Button><Burst show={burst} /></span>
               <Button size="icon" variant="outline" onClick={() => !need() && setListOpen(true)} aria-label="Thêm vào danh sách" className="size-12"><ListPlus /></Button>
               {!mine?.isAuthor && <Button size="lg" variant="gold" onClick={() => !need() && setTip(true)}><Gift />Ủng hộ</Button>}
             </div>
