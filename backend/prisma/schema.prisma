@@ -25,6 +25,7 @@ enum StoryStatus {
 }
 enum Visibility {
   DRAFT
+  PENDING
   PUBLISHED
   HIDDEN
 }
@@ -83,6 +84,7 @@ model User {
   coins        Int      @default(0)
   earnings     Int      @default(0)
   banned       Boolean  @default(false)
+  verified     Boolean  @default(false)
   createdAt    DateTime @default(now())
 
   stories       Story[]
@@ -127,6 +129,9 @@ model Story {
   visibility    Visibility  @default(DRAFT)
   waitFreeHours Int?
   views         Int         @default(0)
+  pinned        Boolean     @default(false)
+  featured      Boolean     @default(false)
+  rankBoost     Int         @default(0)
   authorId      String
   author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   createdAt     DateTime    @default(now())
@@ -350,4 +355,74 @@ model Report {
   status     ReportStatus @default(OPEN)
   createdAt  DateTime     @default(now())
   reporter   User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+}
+
+/// Homepage hero carousel slides (admin-curated, ordered, schedulable).
+model Banner {
+  id        String    @id @default(cuid())
+  title     String
+  subtitle  String    @default("")
+  kicker    String    @default("")
+  storyId   String?
+  link      String    @default("")
+  hue       Int       @default(12)
+  position  Int       @default(0)
+  active    Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+/// Homepage sections (editor's picks etc.), ordered, schedulable.
+model Curation {
+  id        String    @id @default(cuid())
+  title     String
+  subtitle  String    @default("")
+  style     String    @default("shelf")
+  storyIds  String[]
+  position  Int       @default(0)
+  active    Boolean   @default(true)
+  startsAt  DateTime?
+  endsAt    DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Category {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  position Int     @default(0)
+  active   Boolean @default(true)
+}
+
+model CoinPackage {
+  id         String    @id
+  coins      Int
+  bonus      Int       @default(0)
+  vnd        Int
+  label      String    @default("")
+  promoBonus Int       @default(0)
+  promoUntil DateTime?
+  position   Int       @default(0)
+  active     Boolean   @default(true)
+}
+
+model Announcement {
+  id         String   @id @default(cuid())
+  title      String
+  body       String   @default("")
+  link       String   @default("")
+  audience   String   @default("ALL")
+  recipients Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String
+  actor     String
+  action    String
+  target    String   @default("")
+  meta      Json?
+  createdAt DateTime @default(now())
+  @@index([createdAt])
 }

@@ -11,11 +11,12 @@ import { WalletService } from './wallet';
 
 export const storyCard = {
   id: true, slug: true, title: true, synopsis: true, coverUrl: true, coverSeed: true, genre: true, tags: true,
-  ageRating: true, status: true, views: true, lastChapterAt: true, waitFreeHours: true,
-  author: { select: { username: true, name: true, avatarUrl: true } },
+  ageRating: true, status: true, views: true, lastChapterAt: true, waitFreeHours: true, pinned: true, featured: true, rankBoost: true,
+  author: { select: { username: true, name: true, avatarUrl: true, verified: true } },
   _count: { select: { chapters: { where: { status: 'PUBLISHED' } }, likes: true, library: true } },
 } satisfies Prisma.StorySelect;
 
+/** Default genres; admins manage the live list via the Category table. */
 export const GENRES = ['Ngôn tình', 'Huyền huyễn', 'Kiếm hiệp', 'Đô thị', 'Trinh thám', 'Kinh dị', 'Khoa học viễn tưởng', 'Lịch sử', 'Học đường', 'Đời thường', 'Phiêu lưu', 'Thơ & Tản văn'];
 const AGE = ['ALL', 'T13', 'T16', 'T18'];
 const STATUS = ['ONGOING', 'COMPLETED', 'HIATUS'];
@@ -62,7 +63,7 @@ export class StoriesController {
   constructor(private prisma: PrismaService, private wallet: WalletService) {}
 
   @Public() @Get('genres')
-  genres() { return GENRES; }
+  genres() { return activeGenres(this.prisma); }
 
   @Public() @Get(':slug')
   async detail(@Param('slug') slug: string, @CurrentUser() me?: AuthUser) {
@@ -149,12 +150,17 @@ export class StoriesController {
   }
 }
 
-function storyData(b: any, partial = false) {
+export async function activeGenres(prisma: PrismaService): Promise<string[]> {
+  const rows = await prisma.category.findMany({ where: { active: true }, orderBy: { position: 'asc' } });
+  return rows.length ? rows.map((r) => r.name) : GENRES;
+}
+
+function storyData(b: any, partial = false, genres: string[] = GENRES) {
   const d: any = {};
   if (!partial || b.title !== undefined) d.title = need(String(b.title || '').trim().slice(0, 120), 'Thiếu tên truyện');
   if (!partial || b.synopsis !== undefined) d.synopsis = String(b.synopsis || '').slice(0, 3000);
   if (!partial || b.genre !== undefined) {
-    if (!GENRES.includes(b.genre)) throw new BadRequestException('Thể loại không hợp lệ');
+    if (!genres.includes(b.genre)) throw new BadRequestException('Thể loại không hợp lệ');
     d.genre = b.genre;
   }
   if (b.tags !== undefined) d.tags = [...new Set((Array.isArray(b.tags) ? b.tags : String(b.tags).split(',')).map((t: string) => t.trim().toLowerCase()).filter(Boolean))].slice(0, 12);
@@ -194,7 +200,7 @@ export class StudioController {
 
   @Post('stories')
   async create(@CurrentUser() me: AuthUser, @Body() b: any) {
-    const d = storyData(b);
+    const d = storyData(b, false, await activeGenres(this.prisma));
     return this.prisma.story.create({ data: { ...d, slug: await this.stories.uniqueSlug(d.title), coverSeed: Math.floor(Math.random() * 1000), authorId: me.id } });
   }
 
@@ -210,7 +216,7 @@ export class StudioController {
   @Patch('stories/:id')
   async update(@CurrentUser() me: AuthUser, @Param('id') id: string, @Body() b: any) {
     await this.ownStory(me, id);
-    return this.prisma.story.update({ where: { id }, data: storyData(b, true) });
+    return this.prisma.story.update({ where: { id }, data: storyData(b, true, await activeGenres(this.prisma)) });
   }
 
   @Delete('stories/:id')

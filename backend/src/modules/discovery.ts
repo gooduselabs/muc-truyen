@@ -2,7 +2,7 @@ import { Controller, Get, Param, Query } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../common/prisma.service';
 import { AuthUser, CurrentUser, Public, int } from '../common/auth';
-import { GENRES, storyCard } from './stories';
+import { activeGenres, storyCard } from './stories';
 
 const PUB = { visibility: 'PUBLISHED' as const };
 
@@ -38,11 +38,31 @@ export class DiscoveryController {
       this.prisma.story.findMany({ where: PUB, orderBy: { likes: { _count: 'desc' } }, take: 8, select: storyCard }),
     ]);
     const tagRows: any[] = await this.prisma.$queryRaw`SELECT t AS tag, count(*)::int AS n FROM "Story", unnest(tags) t WHERE visibility = 'PUBLISHED' GROUP BY t ORDER BY n DESC LIMIT 24`;
-    return { featured: trending.slice(0, 3), trending, updated, completed, newest, topLiked, genres: GENRES, tags: tagRows };
+    const now = new Date();
+    const live = { active: true, OR: [{ startsAt: null }, { startsAt: { lte: now } }], AND: [{ OR: [{ endsAt: null }, { endsAt: { gt: now } }] }] };
+    const [bannerRows, curationRows, pinned, genres] = await Promise.all([
+      this.prisma.banner.findMany({ where: live, orderBy: { position: 'asc' } }),
+      this.prisma.curation.findMany({ where: live, orderBy: { position: 'asc' } }),
+      this.prisma.story.findMany({ where: { ...PUB, OR: [{ pinned: true }, { featured: true }] }, orderBy: [{ pinned: 'desc' }, { views: 'desc' }], select: storyCard }),
+      activeGenres(this.prisma),
+    ]);
+    const banners = await Promise.all(bannerRows.map(async (b) => ({ ...b, story: b.storyId ? (await this.byIds([b.storyId]))[0] ?? null : null })));
+    const sections = await Promise.all(curationRows.map(async (c) => ({ id: c.id, title: c.title, subtitle: c.subtitle, style: c.style, stories: await this.byIds(c.storyIds) })));
+    // Pinned stories jump to the top of "trending"; featured ones fill the hero when no banner is scheduled.
+    const pinnedIds = new Set(pinned.filter((p) => p.pinned).map((p) => p.id));
+    const trendingOut = [...pinned.filter((p) => p.pinned), ...trending.filter((t: any) => !pinnedIds.has(t.id))];
+    const featured = pinned.filter((p) => p.featured).length ? pinned.filter((p) => p.featured) : trending.slice(0, 3);
+    return { banners, sections: sections.filter((s) => s.stories.length), featured, trending: trendingOut, updated, completed, newest, topLiked, genres, tags: tagRows };
   }
 
   @Public() @Get('rankings')
   async rankings(@Query('by') by = 'week', @Query('genre') genre?: string) {
+    const rows: any[] = await this.rawRankings(by, genre);
+    // Admin ranking overrides: rankBoost > 0 lifts, < 0 sinks (stable for everything else).
+    return rows.map((r, i) => ({ r, k: i - (r.rankBoost ?? 0) * 100 })).sort((a, b) => a.k - b.k).map((x) => x.r);
+  }
+
+  private async rawRankings(by: string, genre?: string) {
     const where: Prisma.StoryWhereInput = { ...PUB, ...(genre ? { genre } : {}) };
     if (by === 'week' && !genre) return this.trending(7, 30);
     if (by === 'likes') return this.prisma.story.findMany({ where, orderBy: { likes: { _count: 'desc' } }, take: 30, select: storyCard });

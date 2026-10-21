@@ -193,3 +193,44 @@ describe('Cộng đồng & khám phá', () => {
     expect(a.body.paragraphs[2].reached).toBe(1);
   });
 });
+
+describe('Quản trị: tuyển chọn trang chủ, gói xu, nhật ký', () => {
+  let adminT: string;
+  beforeAll(async () => {
+    await http.post('/api/auth/register').send({ email: 'admin@test.vn', password: 'matkhau123', name: 'Admin' });
+    await prisma.user.update({ where: { email: 'admin@test.vn' }, data: { role: 'ADMIN' } });
+    adminT = (await http.post('/api/auth/login').send({ email: 'admin@test.vn', password: 'matkhau123' })).body.token;
+  });
+  it('chỉ ADMIN vào được', async () => {
+    await http.get('/api/admin/dashboard').set(auth(readerT)).expect(403);
+    const d = await http.get('/api/admin/dashboard?days=7').set(auth(adminT)).expect(200);
+    expect(d.body.series).toHaveLength(7);
+  });
+  it('banner theo lịch + mục tuyển chọn + ghim xuất hiện trên trang chủ', async () => {
+    await http.post('/api/admin/banners').set(auth(adminT)).send({ title: 'Đang chạy', storyId }).expect(201);
+    await http.post('/api/admin/banners').set(auth(adminT)).send({ title: 'Chưa tới giờ', startsAt: new Date(Date.now() + 864e5) }).expect(201);
+    await http.post('/api/admin/curations').set(auth(adminT)).send({ title: 'BTV chọn', storyIds: [storyId] }).expect(201);
+    await http.post(`/api/admin/stories/${storyId}`).set(auth(adminT)).send({ action: 'pin' }).expect(201);
+    const h = await http.get('/api/discover/home').expect(200);
+    expect(h.body.banners.map((b: any) => b.title)).toEqual(['Đang chạy']);
+    expect(h.body.banners[0].story.id).toBe(storyId);
+    expect(h.body.sections[0].stories[0].id).toBe(storyId);
+    expect(h.body.trending[0].id).toBe(storyId);
+  });
+  it('gói xu khuyến mãi áp dụng khi nạp', async () => {
+    await http.post('/api/admin/packages').set(auth(adminT)).send({ id: 'km', coins: 100, bonus: 10, vnd: 10000, promoBonus: 40, promoUntil: new Date(Date.now() + 864e5) }).expect(201);
+    const before = (await prisma.user.findUniqueOrThrow({ where: { id: readerId } })).coins;
+    await http.post('/api/wallet/topup').set(auth(readerT)).send({ packageId: 'km' }).expect(201);
+    const after = (await prisma.user.findUniqueOrThrow({ where: { id: readerId } })).coins;
+    expect(after - before).toBe(150);
+    await ledgerConsistent(readerId);
+  });
+  it('thông báo toàn hệ thống + nhật ký kiểm toán', async () => {
+    const a = await http.post('/api/admin/announcements').set(auth(adminT)).send({ title: 'Bảo trì 2h sáng' }).expect(201);
+    expect(a.body.recipients).toBeGreaterThan(2);
+    const n = await http.get('/api/notifications').set(auth(reader2T)).expect(200);
+    expect(n.body.items.some((i: any) => i.title === 'Bảo trì 2h sáng')).toBe(true);
+    const log = await http.get('/api/admin/audit').set(auth(adminT)).expect(200);
+    expect(log.body.map((l: any) => l.action)).toEqual(expect.arrayContaining(['banner.create', 'story.pin', 'package.upsert', 'announcement.send']));
+  });
+});

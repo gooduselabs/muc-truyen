@@ -1,3 +1,4 @@
+import { GENRES } from '../src/modules/stories';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { docFromText, slugify, toParagraphs, wordCount } from '../src/common/content';
@@ -15,8 +16,9 @@ async function ledger(userId: string, account: 'COINS' | 'EARNINGS', type: any, 
 }
 
 async function main() {
+  if (process.env.SEED_IF_EMPTY && (await prisma.user.count()) > 0) return console.log('Đã có dữ liệu — bỏ qua seed.');
   console.log('Xoá dữ liệu cũ…');
-  await prisma.$executeRawUnsafe(`TRUNCATE "User","Story","Chapter","Unlock","LedgerEntry","Payment","PayoutRequest","LibraryItem","ReadingProgress","ChapterRead","Comment","ChapterLike","StoryLike","Review","ReadingList","ReadingListItem","Notification","Report","Follow","WaitFreeTimer" CASCADE`);
+  await prisma.$executeRawUnsafe(`TRUNCATE "User","Story","Chapter","Unlock","LedgerEntry","Payment","PayoutRequest","LibraryItem","ReadingProgress","ChapterRead","Comment","ChapterLike","StoryLike","Review","ReadingList","ReadingListItem","Notification","Report","Follow","WaitFreeTimer","Banner","Curation","Category","CoinPackage","Announcement","AuditLog" CASCADE`);
   const hash = await bcrypt.hash('muc12345', 10);
   const mk = (email: string, username: string, name: string, role: any, bio = '') =>
     prisma.user.create({ data: { email, username, name, role, bio, passwordHash: hash } });
@@ -146,7 +148,53 @@ async function main() {
     await ledger(tn.id, 'EARNINGS', 'PAYOUT', -amt, `Yêu cầu rút ${amt} xu`, new Date());
     void p;
   }
-  void admin;
+  const pkgs = [['p50', 50, 5000], ['p120', 120, 10000], ['p300', 300, 25000], ['p650', 650, 50000]] as const;
+  for (let i = 0; i < 26; i++) {
+    const [pid, coins, vnd] = pkgs[(i * 7) % 4];
+    const u = readers[1 + (i % (readers.length - 1))];
+    const at = new Date(now - ((i * 11) % 29) * DAY - (i % 5) * 3600e3);
+    await prisma.payment.create({ data: { userId: u.id, provider: 'sandbox', packageId: pid, amountVnd: vnd, coins, status: 'SUCCEEDED', createdAt: at } });
+    await ledger(u.id, 'COINS', 'TOPUP', coins, `Nạp ${coins} xu qua sandbox`, at);
+  }
+  console.log('Tạo dữ liệu quản trị: banner, mục tuyển chọn, gói xu, nhật ký…');
+  const by = (t: string) => stories.find((x) => x.title === t)!;
+  for (const a of Object.values(authors)) await prisma.user.update({ where: { id: a.id }, data: { verified: true } });
+  for (const [i, name] of GENRES.entries()) await prisma.category.create({ data: { name, position: i } });
+  const pk = [
+    { id: 'p50', coins: 50, bonus: 0, vnd: 5000, label: '' },
+    { id: 'p120', coins: 100, bonus: 20, vnd: 10000, label: 'Phổ biến' },
+    { id: 'p300', coins: 250, bonus: 50, vnd: 25000, label: '', promoBonus: 30, promoUntil: new Date(now + 7 * DAY) },
+    { id: 'p650', coins: 500, bonus: 150, vnd: 50000, label: 'Hời nhất' },
+  ];
+  for (const [i, p] of pk.entries()) await prisma.coinPackage.create({ data: { ...p, position: i } });
+  const lh = by('Người Gác Đèn Ở Cù Lao Mây'), mh = by('Mùa Hạ Năm Ấy Có Cậu'), hs = by('Hồ Sơ Mật Chung Cư 404');
+  await prisma.story.update({ where: { id: lh.id }, data: { pinned: true, featured: true } });
+  await prisma.story.update({ where: { id: hs.id }, data: { featured: true, rankBoost: 2 } });
+  await prisma.story.update({ where: { id: mh.id }, data: { featured: true } });
+  await prisma.banner.createMany({ data: [
+    { title: lh.title, kicker: 'Biên tập viên chọn', subtitle: 'Một ngọn hải đăng giữ cho cả thế giới khỏi trôi đi. Truyện cổ tích miền Tây dành cho người lớn.', storyId: lh.id, hue: 18, position: 0 },
+    { title: 'Mùa thi viết “Đêm Trung Thu”', kicker: 'Sự kiện · đến 30/11', subtitle: 'Gửi truyện ngắn dưới 5.000 chữ, giải thưởng 10 triệu đồng và xuất bản trên trang chủ.', link: '/kham-pha', hue: 38, position: 1 },
+    { title: hs.title, kicker: 'Trinh thám hot', subtitle: 'Căn hộ 404 không ai nhớ đã từng có người ở. Cho tới khi một shipper biến mất.', storyId: hs.id, hue: 250, position: 2 },
+    { title: 'Ưu đãi nạp xu', kicker: 'Hết hạn', subtitle: 'Banner đã hết lịch — không hiển thị.', link: '/vi', hue: 120, position: 3, endsAt: new Date(now - DAY) },
+  ] });
+  await prisma.curation.createMany({ data: [
+    { title: 'Biên tập viên chọn', subtitle: 'Những trang viết chúng tôi muốn bạn đọc trước tiên', style: 'spotlight', storyIds: [lh.id, mh.id, by('Kiếm Khách Phố Hàng Bạc').id], position: 0 },
+    { title: 'Chữa lành cuối tuần', subtitle: 'Dịu dàng, ấm áp, đọc xong thấy nhẹ lòng', style: 'shelf', storyIds: stories.filter((x) => x.tags.includes('chữa lành') || x.genre === 'Thơ & Tản văn').map((x) => x.id), position: 1 },
+    { title: 'Rợn người đêm khuya', subtitle: 'Đừng đọc một mình', style: 'shelf', storyIds: [by('Chuyện Ma Làng Gốm').id, hs.id], position: 2 },
+  ] });
+  // A story waiting for moderation.
+  const pending = await prisma.story.create({ data: {
+    slug: 'gio-nam-tren-pho-hien', title: 'Gió Nam Trên Phố Hiến', synopsis: 'Thương cảng Phố Hiến thế kỷ XVII, một cô gái giữ sổ sách cho thương thuyền Hà Lan và bí mật của chiếc rương khoá đồng.',
+    genre: 'Lịch sử', tags: ['phố hiến', 'thương cảng', 'cổ trang'], visibility: 'PENDING', coverSeed: 1234, authorId: tn.id,
+  } });
+  const pd = docFromText('Năm ấy gió nam thổi sớm, và thuyền Hà Lan cập bến khi hoa gạo còn chưa rụng hết.');
+  await prisma.chapter.create({ data: { storyId: pending.id, number: 1, title: 'Chiếc rương khoá đồng', contentJson: pd, paragraphs: toParagraphs(pd) as any, wordCount: 20, status: 'PUBLISHED', publishedAt: new Date() } });
+  const ann = await prisma.announcement.create({ data: { title: 'Chào mừng đến với Mực 🎉', body: 'Phiên bản 0.1 đã ra mắt: đọc offline, nghe truyện, chờ là miễn phí.', audience: 'ALL', recipients: readers.length + 4, createdAt: new Date(now - 2 * DAY) } });
+  const logs = [
+    ['announcement.send', ann.title], ['banner.create', lh.title], ['story.pin', lh.title], ['story.feature', hs.title], ['story.boost', hs.title],
+    ['curation.create', 'Biên tập viên chọn'], ['package.upsert', 'p300'], ['user.update', '@linhan'], ['report.dismiss', 'comment'],
+  ];
+  for (const [i, [action, target]] of logs.entries()) await prisma.auditLog.create({ data: { actorId: admin.id, actor: admin.username, action, target, createdAt: new Date(now - (logs.length - i) * 5 * 3600e3) } });
   console.log(`Xong: ${stories.length} truyện, ${readers.length} độc giả. Đăng nhập: docgia@muc.vn / linhan@muc.vn / admin@muc.vn — mật khẩu muc12345`);
 }
 

@@ -6,4 +6,4 @@ RUN npm ci
 COPY . .
 RUN npx prisma generate && npx nest build
 EXPOSE 4000
-CMD ["sh", "-c", "npx prisma migrate deploy && (npx ts-node prisma/seed.ts || true) && node dist/main.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && SEED_IF_EMPTY=1 npx ts-node prisma/seed.ts && node dist/main.js"]

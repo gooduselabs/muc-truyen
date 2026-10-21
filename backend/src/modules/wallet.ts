@@ -116,8 +116,19 @@ export class WalletService {
     return { ok: true };
   }
 
+  /** Live coin packages (admin-managed) with active promotions applied; falls back to economy defaults. */
+  async packages() {
+    const rows = await this.prisma.coinPackage.findMany({ where: { active: true }, orderBy: { position: 'asc' } });
+    const now = new Date();
+    if (!rows.length) return PACKAGES.map((p) => ({ ...p, label: '', promo: false }));
+    return rows.map((r) => {
+      const promo = r.promoBonus > 0 && (!r.promoUntil || r.promoUntil > now);
+      return { id: r.id, coins: r.coins, bonus: r.bonus + (promo ? r.promoBonus : 0), vnd: r.vnd, label: r.label, promo, promoUntil: r.promoUntil };
+    });
+  }
+
   async topup(userId: string, packageId: string, providerId: string, returnUrl: string) {
-    const pkg = PACKAGES.find((p) => p.id === packageId);
+    const pkg = (await this.packages()).find((p) => p.id === packageId);
     if (!pkg) throw new BadRequestException('Gói xu không tồn tại');
     const provider = PROVIDERS.find((p) => p.id === providerId);
     if (!provider || !provider.enabled()) throw new BadRequestException('Cổng thanh toán chưa được cấu hình');
@@ -167,10 +178,10 @@ export class WalletController {
   constructor(private wallet: WalletService, private prisma: PrismaService) {}
 
   @Public() @Get('config')
-  config() {
+  async config() {
     return {
       coinVnd: COIN_VND, rentalHours: RENTAL_HOURS, rentalRatio: RENTAL_RATIO, authorShare: AUTHOR_SHARE, tipShare: TIP_SHARE,
-      minPayout: MIN_PAYOUT, packages: PACKAGES,
+      minPayout: MIN_PAYOUT, packages: await this.wallet.packages(),
       providers: PROVIDERS.map((p) => ({ id: p.id, label: p.label, enabled: p.enabled() })),
     };
   }
