@@ -20,6 +20,10 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    // API payloads are untyped JSON in v0.1; typed SDK generation is on the roadmap.
+    rules: { "@typescript-eslint/no-explicit-any": "off" },
+  },
 ];
 
 export default eslintConfig;

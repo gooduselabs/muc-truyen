@@ -60,7 +60,7 @@ function Editor({ id }: { id: string }) {
     } catch (e: any) { toast(e.message, true); setSaved('dirty'); throw e; }
   }, [editor, id, title, price, toast]);
   saveRef.current = save;
-  useEffect(() => { schedule(); }, [title, price]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { schedule(); }, [title, price]);
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); save(); } };
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);

@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { BookOpen, BookmarkPlus, BookmarkCheck, Clock, Coins, Eye, Gift, Heart, Lock, ListPlus, Star, Unlock, UserPlus, UserCheck, Play } from 'lucide-react';
+import { BookmarkPlus, BookmarkCheck, Clock, Coins, Gift, Heart, Lock, ListPlus, Star, Unlock, UserPlus, UserCheck, Play } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { AGE_LABEL, STATUS_LABEL, ago, cn, fmt } from '@/lib/utils';

@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Coins, Info, Sparkles, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
+import { Coins, Info, Sparkles } from 'lucide-react';
 import { useApi, useAuth } from '@/lib/auth';
 import { api } from '@/lib/api';
 import { RequireAuth } from '@/components/require-auth';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/misc';
 import { useToast } from '@/components/toast';
 import { cn, vnd } from '@/lib/utils';
+import { LedgerList } from '@/components/ledger';
 
 
 
@@ -63,24 +64,10 @@ function Wallet() {
       </div>
       <div>
         <h2 className="font-serif text-xl font-bold">Lịch sử giao dịch</h2>
-        <Ledger items={w.data.ledger} />
+        <LedgerList items={w.data.ledger} />
       </div>
     </div>
   );
 }
 
-function _unused() { return null; }
-  return (
-    <div className="mt-4 divide-y divide-line overflow-hidden rounded-3xl border border-line bg-card">
-      {items.map((l: any) => (
-        <div key={l.id} className="flex items-center gap-3 px-4 py-3">
-          <div className={cn('grid size-9 place-items-center rounded-full', l.amount > 0 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-brand-soft text-brand')}>{l.amount > 0 ? <ArrowDownLeft className="size-4" /> : <ArrowUpRight className="size-4" />}</div>
-          <div className="min-w-0 flex-1"><div className="text-sm font-medium">{TYPE[l.type] || l.type}{l.account === 'EARNINGS' && <span className="ml-1 text-xs text-gold">(thu nhập)</span>}</div><div className="truncate text-xs text-muted">{l.note}</div></div>
-          <div className={cn('font-mono text-sm font-bold', l.amount > 0 ? 'text-emerald-600' : 'text-fg')}>{l.amount > 0 ? '+' : ''}{l.amount}</div>
-        </div>
-      ))}
-      {items.length === 0 && <div className="p-8 text-center text-sm text-muted">Chưa có giao dịch</div>}
-    </div>
-  );
-}
 export default function P() { return <RequireAuth><div className="mx-auto max-w-6xl px-6 py-12"><h1 className="mb-8 font-serif text-4xl font-bold">Ví xu</h1><Wallet /></div></RequireAuth>; }
