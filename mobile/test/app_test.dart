@@ -34,11 +34,13 @@ Future<AppState> makeState() async {
 }
 
 void main() {
-  testWidgets('trang chủ hiển thị truyện nổi bật và kệ truyện', (t) async {
+  testWidgets('trang chủ hiển thị banner, mục tuyển chọn và kệ truyện', (t) async {
     final s = await makeState();
     await t.pumpWidget(MucApp(state: s));
     await t.pumpAndSettle();
-    expect(find.text('NỔI BẬT'), findsWidgets);
+    expect(find.text('BIÊN TẬP VIÊN CHỌN'), findsWidgets);
+    expect(find.text('Biên tập viên chọn'), findsOneWidget);
+    await t.scrollUntilVisible(find.text('Đang thịnh hành'), 300, scrollable: find.byType(Scrollable).first);
     expect(find.text('Đang thịnh hành'), findsOneWidget);
     expect(find.text('Trang chủ'), findsOneWidget);
   });
