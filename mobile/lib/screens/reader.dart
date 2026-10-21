@@ -6,6 +6,7 @@ import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'account.dart';
+import '../motion.dart';
 
 class ReaderPalette {
   final Color bg, fg, muted, card;
@@ -37,6 +38,8 @@ class _ReaderScreenState extends State<ReaderScreen> {
   Timer? beat;
   FlutterTts? tts;
   int? speaking;
+  int dir = 1;
+  int likeBurst = 0;
 
   AppState get app => AppScope.read(context);
   List get paras => (d?['chapter']?['paragraphs'] as List?) ?? [];
@@ -60,7 +63,6 @@ class _ReaderScreenState extends State<ReaderScreen> {
 
   Future<void> load() async {
     setState(() {
-      d = null;
       err = null;
       maxPara = 0;
       lastSent = -1;
@@ -114,6 +116,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
     _sync();
     tts?.stop();
     setState(() {
+      dir = n >= number ? 1 : -1;
       number = n;
       speaking = null;
       chrome = true;
@@ -130,13 +133,28 @@ class _ReaderScreenState extends State<ReaderScreen> {
     try {
       await app.api.post('/wallet/unlock/${d!['chapter']['id']}', {'mode': mode});
       await app.refreshMe();
-      if (mounted) context.toast(mode == 'rent' ? 'Đã thuê chương trong 48 giờ' : mode == 'wait' ? 'Đã dùng vé chờ miễn phí' : 'Đã mở khoá vĩnh viễn');
+      if (mounted) showCoinCelebration(context, mode == 'rent' ? 'Đã thuê 48 giờ' : mode == 'wait' ? 'Đã dùng vé miễn phí' : 'Đã mở khoá vĩnh viễn');
       await load();
     } catch (e) {
       if (mounted) context.toast(e is ApiError ? e.message : '$e');
     } finally {
       if (mounted) setState(() => busy = false);
     }
+  }
+
+  Future<void> like() async {
+    if (!app.loggedIn) {
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginScreen()));
+      return;
+    }
+    try {
+      final r = await app.api.post('/chapters/${d!['chapter']['id']}/like');
+      setState(() {
+        d!['liked'] = r['liked'];
+        d!['likes'] = (d!['likes'] ?? 0) + (r['liked'] == true ? 1 : -1);
+        if (r['liked'] == true) likeBurst++;
+      });
+    } catch (_) {}
   }
 
   Future<void> toggleTts() async {
@@ -203,7 +221,10 @@ class _ReaderScreenState extends State<ReaderScreen> {
             : d == null
                 ? const Loading()
                 : Stack(children: [
-                    GestureDetector(
+                    PageTurnSwitcher(
+                      direction: dir,
+                      child: GestureDetector(
+                      key: ValueKey('ch-${ch['number']}'),
                       onTap: () => setState(() => chrome = !chrome),
                       child: CustomScrollView(controller: sc, slivers: [
                         SliverToBoxAdapter(
@@ -214,7 +235,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                               child: Column(children: [
                                 Text('CHƯƠNG ${ch['number']}', style: TextStyle(letterSpacing: 3, fontSize: 12, color: Brand.seal, fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 10),
-                                Text(ch['title'], textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Lora', fontSize: 27, height: 1.25, fontWeight: FontWeight.w700, color: pal.fg)),
+                                Text(ch['title'], textAlign: TextAlign.center, style: TextStyle(fontFamily: display, fontSize: 30, height: 1.25, fontWeight: FontWeight.w700, color: pal.fg)),
                                 const SizedBox(height: 8),
                                 Text('${d!['story']['title']} · ${ch['wordCount'] ?? 0} chữ${offline ? ' · ngoại tuyến' : ''}',
                                     textAlign: TextAlign.center, style: TextStyle(fontSize: 12.5, color: pal.muted)),
@@ -250,6 +271,21 @@ class _ReaderScreenState extends State<ReaderScreen> {
                                 Text('— Hết chương ${ch['number']} —', style: TextStyle(fontFamily: 'Lora', fontStyle: FontStyle.italic, color: pal.muted)),
                                 const SizedBox(height: 16),
                                 if (!offline)
+                                  Burst(
+                                    trigger: likeBurst,
+                                    child: IconButton.filledTonal(
+                                      iconSize: 28,
+                                      onPressed: like,
+                                      icon: AnimatedSwitcher(
+                                        duration: const Duration(milliseconds: 250),
+                                        transitionBuilder: (c, a) => ScaleTransition(scale: a, child: c),
+                                        child: Icon(d!['liked'] == true ? Icons.favorite_rounded : Icons.favorite_border_rounded, key: ValueKey(d!['liked']), color: Brand.seal),
+                                      ),
+                                    ),
+                                  ),
+                                if (!offline) Text('${d!['likes'] ?? 0} lượt thích', style: TextStyle(fontSize: 12, color: pal.muted)),
+                                const SizedBox(height: 12),
+                                if (!offline)
                                   OutlinedButton.icon(
                                     onPressed: () => openComments(null),
                                     icon: const Icon(Icons.forum_outlined),
@@ -269,6 +305,7 @@ class _ReaderScreenState extends State<ReaderScreen> {
                           ),
                         ),
                       ]),
+                    ),
                     ),
                     // Top bar
                     AnimatedPositioned(

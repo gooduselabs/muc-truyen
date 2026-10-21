@@ -4,6 +4,7 @@ import '../state.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'account.dart';
+import '../motion.dart';
 import 'reader.dart';
 
 class StoryScreen extends StatefulWidget {
@@ -164,7 +165,7 @@ class _StoryScreenState extends State<StoryScreen> {
               ),
               padding: const EdgeInsets.fromLTRB(20, 90, 20, 20),
               child: Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Cover(story: st, width: 128),
+                Tilt3D(child: Cover(story: st, width: 128)),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.end, children: [

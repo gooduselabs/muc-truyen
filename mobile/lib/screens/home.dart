@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'reader.dart';
 import 'account.dart';
+import '../motion.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -37,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 14, 12, 4),
                 child: Row(children: [
-                  const Logo(),
+                  const Logo(size: 34, tagline: true),
                   const Spacer(),
                   if (app.loggedIn) CoinBadge(app.coins),
                   IconButton(
@@ -46,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ]),
               ),
-              _Hero(stories: (home['featured'] as List)),
+              _Hero(banners: _banners(home)),
               if (history.isNotEmpty) ...[
                 const SectionTitle('Đọc tiếp', sub: 'Tiến độ được đồng bộ với web'),
                 SizedBox(
@@ -60,6 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ],
+              for (final sec in (home['sections'] as List? ?? []).take(1)) sec['style'] == 'spotlight' ? _Spotlight(sec) : _Shelf(sec['title'], sec['stories'], sub: sec['subtitle']),
               _Shelf('Đang thịnh hành', home['trending'], sub: 'Được đọc nhiều nhất tuần này'),
               if (rec.isNotEmpty) _Shelf('Dành cho bạn', rec, sub: 'Gợi ý theo thể loại bạn hay đọc'),
               const SectionTitle('Thể loại'),
@@ -80,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
               ),
+              for (final sec in (home['sections'] as List? ?? []).skip(1)) sec['style'] == 'spotlight' ? _Spotlight(sec) : _Shelf(sec['title'], sec['stories'], sub: sec['subtitle']),
               _Shelf('Mới cập nhật', home['updated']),
               _Shelf('Đã hoàn thành', home['completed'], sub: 'Đọc một mạch không phải chờ'),
               _Shelf('Được yêu thích', home['topLiked']),
@@ -91,56 +94,100 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
+List<Map> _banners(Map home) {
+  final b = (home['banners'] as List? ?? []).cast<Map>();
+  if (b.isNotEmpty) return b;
+  return (home['featured'] as List).map<Map>((s) => {'id': s['id'], 'title': s['title'], 'subtitle': s['synopsis'], 'kicker': 'Nổi bật', 'hue': ((s['coverSeed'] ?? 1) * 47) % 360, 'story': s}).toList();
+}
+
+/// Admin-curated hero carousel with parallax: cover and text move at different speeds while swiping.
 class _Hero extends StatefulWidget {
-  final List stories;
-  const _Hero({required this.stories});
+  final List<Map> banners;
+  const _Hero({required this.banners});
   @override
   State<_Hero> createState() => _HeroState();
 }
 
 class _HeroState extends State<_Hero> {
   final pc = PageController(viewportFraction: .9);
-  int page = 0;
+  double page = 0;
+  @override
+  void initState() {
+    super.initState();
+    pc.addListener(() => setState(() => page = pc.page ?? 0));
+  }
+
+  @override
+  void dispose() {
+    pc.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) => Column(children: [
         SizedBox(
-          height: 230,
+          height: 250,
           child: PageView.builder(
             controller: pc,
-            itemCount: widget.stories.length,
-            onPageChanged: (p) => setState(() => page = p),
+            itemCount: widget.banners.length,
             itemBuilder: (c, i) {
-              final s = widget.stories[i];
-              final seed = (s['coverSeed'] ?? 1) as int;
-              final hue = ((seed * 47) % 360).toDouble();
+              final b = widget.banners[i];
+              final s = b['story'] as Map?;
+              final hue = ((b['hue'] ?? 12) as num).toDouble();
+              final d = (page - i).clamp(-1.0, 1.0);
               return GestureDetector(
-                onTap: () => openStory(context, s),
-                child: AnimatedScale(
-                  duration: const Duration(milliseconds: 300),
-                  scale: i == page ? 1 : .94,
+                onTap: () => s != null ? openStory(context, s) : null,
+                child: Transform.scale(
+                  scale: 1 - d.abs() * .06,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                    padding: const EdgeInsets.all(18),
+                    margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 10),
+                    clipBehavior: Clip.antiAlias,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(26),
+                      borderRadius: BorderRadius.circular(28),
                       gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [
-                        HSLColor.fromAHSL(1, hue, .45, .30).toColor(),
-                        HSLColor.fromAHSL(1, (hue + 50) % 360, .45, .12).toColor(),
+                        HSLColor.fromAHSL(1, hue, .55, .32).toColor(),
+                        HSLColor.fromAHSL(1, (hue + 40) % 360, .45, .12).toColor(),
                       ]),
-                      boxShadow: [BoxShadow(color: HSLColor.fromAHSL(.4, hue, .5, .3).toColor(), blurRadius: 20, offset: const Offset(0, 10))],
+                      boxShadow: [BoxShadow(color: HSLColor.fromAHSL(.45, hue, .5, .25).toColor(), blurRadius: 22, offset: const Offset(0, 12))],
                     ),
-                    child: Row(children: [
-                      Cover(story: s, width: 106),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
-                          const Pill('NỔI BẬT', color: Color(0xFFFFC870), icon: Icons.auto_awesome),
-                          const SizedBox(height: 10),
-                          Text(s['title'], maxLines: 2, style: const TextStyle(fontFamily: 'Lora', color: Colors.white, fontSize: 20, fontWeight: FontWeight.w700, height: 1.2)),
-                          const SizedBox(height: 6),
-                          Text(s['synopsis'] ?? '', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white70, fontSize: 12.5, height: 1.45)),
-                          const SizedBox(height: 10),
-                          Text('${s['author']['name']} · ${s['genre']}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+                    child: Stack(children: [
+                      // far layer: big italic watermark, moves slowest
+                      Positioned(
+                        right: -30 + d * 60,
+                        bottom: -40,
+                        child: Text('Mực', style: TextStyle(fontFamily: display, fontStyle: FontStyle.italic, fontWeight: FontWeight.w900, fontSize: 150, color: Colors.white.withValues(alpha: .06))),
+                      ),
+                      Positioned(top: -60, right: -40, child: Container(width: 200, height: 200, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [const Color(0xFFFFB86B).withValues(alpha: .35), Colors.transparent])))),
+                      Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Row(children: [
+                          // near layer: cover moves faster than the card
+                          Transform.translate(
+                            offset: Offset(d * -46, 0),
+                            child: s != null
+                                ? Transform(alignment: Alignment.center, transform: Matrix4.identity()..setEntry(3, 2, .0015)..rotateY(-.18 + d * .4), child: Cover(story: s, width: 112))
+                                : SizedBox(width: 112, child: Center(child: Icon(Icons.local_fire_department_rounded, size: 72, color: const Color(0xFFFFC870).withValues(alpha: .9)))),
+                          ),
+                          const SizedBox(width: 18),
+                          Expanded(
+                            child: Transform.translate(
+                              offset: Offset(d * 24, 0),
+                              child: Opacity(
+                                opacity: (1 - d.abs() * 1.4).clamp(0, 1),
+                                child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.center, children: [
+                                  Pill((b['kicker'] ?? 'Nổi bật').toString().toUpperCase(), color: const Color(0xFFFFC870), icon: Icons.auto_awesome),
+                                  const SizedBox(height: 10),
+                                  Text(b['title'], maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: display, color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900, height: 1.1)),
+                                  const SizedBox(height: 6),
+                                  Text((b['subtitle'] ?? '').toString(), maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Lora', color: Colors.white70, fontSize: 12.5, height: 1.45)),
+                                  if (s != null) ...[
+                                    const SizedBox(height: 10),
+                                    Text('${s['author']['name']} · ${s['genre']}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                                  ],
+                                ]),
+                              ),
+                            ),
+                          ),
                         ]),
                       ),
                     ]),
@@ -151,16 +198,73 @@ class _HeroState extends State<_Hero> {
           ),
         ),
         Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          for (var i = 0; i < widget.stories.length; i++)
+          for (var i = 0; i < widget.banners.length; i++)
             AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               margin: const EdgeInsets.all(3),
-              width: i == page ? 18 : 6,
+              width: (page.round() == i) ? 22 : 6,
               height: 6,
-              decoration: BoxDecoration(color: i == page ? Brand.seal : context.muted.withValues(alpha: .3), borderRadius: BorderRadius.circular(9)),
+              decoration: BoxDecoration(color: page.round() == i ? context.accent : context.muted.withValues(alpha: .3), borderRadius: BorderRadius.circular(9)),
             ),
         ]),
       ]);
+}
+
+/// Editor's-pick spotlight on a night-ink panel.
+class _Spotlight extends StatelessWidget {
+  final Map sec;
+  const _Spotlight(this.sec);
+  @override
+  Widget build(BuildContext context) {
+    final items = (sec['stories'] as List);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 26, 16, 0),
+      child: StaggerIn(
+        index: 0,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(18, 20, 0, 20),
+          decoration: BoxDecoration(gradient: Brand.nightGradient, borderRadius: BorderRadius.circular(28), boxShadow: [BoxShadow(color: Brand.ink.withValues(alpha: .35), blurRadius: 20, offset: const Offset(0, 10))]),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Transform.rotate(
+              angle: -.08,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(border: Border.all(color: const Color(0xFFFF9B73), width: 1.6), borderRadius: BorderRadius.circular(5)),
+                child: const Text('TUYỂN CHỌN', style: TextStyle(fontFamily: display, color: Color(0xFFFF9B73), fontWeight: FontWeight.w800, fontSize: 10, letterSpacing: 1.5)),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(sec['title'], style: const TextStyle(fontFamily: display, fontSize: 26, color: Color(0xFFF2E8D5), fontWeight: FontWeight.w900)),
+            Text(sec['subtitle'] ?? '', style: const TextStyle(fontFamily: 'Lora', fontStyle: FontStyle.italic, color: Colors.white60)),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 210,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(right: 18),
+                itemCount: items.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 14),
+                itemBuilder: (c, i) => StaggerIn(
+                  index: i + 1,
+                  child: GestureDetector(
+                    onTap: () => openStory(context, items[i]),
+                    child: SizedBox(
+                      width: 112,
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Tilt3D(child: Cover(story: items[i], width: 112)),
+                        const SizedBox(height: 6),
+                        Text(items[i]['author']['name'], style: const TextStyle(color: Colors.white60, fontSize: 11.5)),
+                      ]),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
 }
 
 class _ContinueCard extends StatelessWidget {
@@ -214,13 +318,13 @@ class _Shelf extends StatelessWidget {
   Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         SectionTitle(title, sub: sub),
         SizedBox(
-          height: 236,
+          height: 252,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
             itemCount: items.length,
             separatorBuilder: (_, _) => const SizedBox(width: 14),
-            itemBuilder: (c, i) => StoryTile(story: items[i]),
+            itemBuilder: (c, i) => StaggerIn(index: i, child: StoryTile(story: items[i])),
           ),
         ),
       ]);
