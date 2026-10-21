@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/misc';
 import { useToast } from '@/components/toast';
 import { cn, vnd } from '@/lib/utils';
 
-const TYPE: Record<string, string> = { TOPUP: 'Nạp xu', UNLOCK: 'Mua chương', RENTAL: 'Thuê chương 48h', TIP_SENT: 'Ủng hộ tác giả', TIP_RECEIVED: 'Nhận ủng hộ', SALE: 'Doanh thu chương', PAYOUT: 'Rút tiền', PAYOUT_REFUND: 'Hoàn rút tiền', BONUS: 'Quà tặng', ADJUST: 'Điều chỉnh' };
+
 
 function Wallet() {
   const { refresh } = useAuth();
@@ -69,7 +69,7 @@ function Wallet() {
   );
 }
 
-function Ledger({ items }: { items: any[] }) {
+function _unused() { return null; }
   return (
     <div className="mt-4 divide-y divide-line overflow-hidden rounded-3xl border border-line bg-card">
       {items.map((l: any) => (
