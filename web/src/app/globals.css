@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg: #fbf8f3;
+  --bg-soft: #f3eee5;
+  --card: #ffffff;
+  --fg: #1b1724;
+  --muted: #6e6779;
+  --line: #e7e0d4;
+  --brand: #d9452f;       /* son đỏ — màu triện */
+  --brand-soft: #fbe5df;
+  --gold: #c08a2b;
+  --ink: #1d1838;         /* mực tím than */
+  --ring: rgba(217, 69, 47, .35);
+}
+.dark {
+  --bg: #0f0d16;
+  --bg-soft: #17141f;
+  --card: #1a1724;
+  --fg: #efeaf6;
+  --muted: #9d95ac;
+  --line: #2a2536;
+  --brand: #ff6b52;
+  --brand-soft: #3a1c19;
+  --gold: #e3b45a;
+  --ink: #c9c1ff;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-soft: var(--bg-soft);
+  --color-card: var(--card);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-gold: var(--gold);
+  --color-ink: var(--ink);
+  --font-sans: var(--font-ui), system-ui, sans-serif;
+  --font-serif: var(--font-read), Georgia, serif;
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-ui), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--brand); color: white; }
+
+/* Nền giấy có hạt rất nhẹ */
+.paper {
+  background-image: radial-gradient(rgba(120, 90, 40, .05) 1px, transparent 1px);
+  background-size: 3px 3px;
+}
+.dark .paper { background-image: radial-gradient(rgba(255, 255, 255, .025) 1px, transparent 1px); }
+
+.glass { background: color-mix(in oklab, var(--bg) 78%, transparent); backdrop-filter: saturate(1.4) blur(14px); }
+
+.fade-up { animation: fadeUp .6s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.stagger > * { animation: fadeUp .55s cubic-bezier(.2, .7, .2, 1) both; }
+.stagger > *:nth-child(2) { animation-delay: .05s } .stagger > *:nth-child(3) { animation-delay: .1s }
+.stagger > *:nth-child(4) { animation-delay: .15s } .stagger > *:nth-child(5) { animation-delay: .2s }
+.stagger > *:nth-child(6) { animation-delay: .25s } .stagger > *:nth-child(n+7) { animation-delay: .3s }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+/* Trình đọc */
+.reader-light { --r-bg: #fdfbf7; --r-fg: #26212e; --r-muted: #8a8294; --r-line: #ece5d9; }
+.reader-sepia { --r-bg: #f4ead5; --r-fg: #4a3a24; --r-muted: #8f7a5a; --r-line: #e2d3b4; }
+.reader-dark { --r-bg: #121019; --r-fg: #d8d2e2; --r-muted: #7d758c; --r-line: #262131; }
+.reader { background: var(--r-bg); color: var(--r-fg); transition: background .4s, color .4s; }
+.reader .para { transition: background .25s; border-radius: 10px; }
+.reader .para:hover { background: color-mix(in oklab, var(--r-fg) 5%, transparent); }
+
+/* Trình soạn thảo Tiptap */
+.tiptap { outline: none; min-height: 60vh; }
+.tiptap p { margin: 0 0 1.1em; }
+.tiptap h2 { font-size: 1.5em; font-weight: 700; margin: 1.2em 0 .6em; }
+.tiptap blockquote { border-left: 3px solid var(--brand); padding-left: 1em; color: var(--muted); font-style: italic; }
+.tiptap hr { border: none; text-align: center; margin: 2em 0; }
+.tiptap hr::after { content: "✦ ✦ ✦"; color: var(--muted); letter-spacing: .6em; }
+.tiptap p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: var(--muted); float: left; height: 0; pointer-events: none; }

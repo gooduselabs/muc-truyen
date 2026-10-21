@@ -1,0 +1,353 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  READER
+  AUTHOR
+  ADMIN
+}
+enum AgeRating {
+  ALL
+  T13
+  T16
+  T18
+}
+enum StoryStatus {
+  ONGOING
+  COMPLETED
+  HIATUS
+}
+enum Visibility {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+}
+enum ChapterStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+enum UnlockKind {
+  PURCHASE
+  RENTAL
+  WAIT_FREE
+}
+enum Account {
+  COINS
+  EARNINGS
+}
+enum LedgerType {
+  TOPUP
+  UNLOCK
+  RENTAL
+  TIP_SENT
+  TIP_RECEIVED
+  SALE
+  PAYOUT
+  PAYOUT_REFUND
+  ADJUST
+  BONUS
+}
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+enum PayoutStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  username     String   @unique
+  name         String
+  bio          String   @default("")
+  avatarUrl    String?
+  role         Role     @default(READER)
+  coins        Int      @default(0)
+  earnings     Int      @default(0)
+  banned       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  stories       Story[]
+  following     Follow[]          @relation("follower")
+  followers     Follow[]          @relation("following")
+  unlocks       Unlock[]
+  ledger        LedgerEntry[]
+  library       LibraryItem[]
+  progress      ReadingProgress[]
+  comments      Comment[]
+  reviews       Review[]
+  lists         ReadingList[]
+  notifications Notification[]
+  payments      Payment[]
+  payouts       PayoutRequest[]
+  reports       Report[]
+  waitTimers    WaitFreeTimer[]
+  chapterLikes  ChapterLike[]
+  storyLikes    StoryLike[]
+}
+
+model Follow {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+  follower    User     @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+  @@id([followerId, followingId])
+}
+
+model Story {
+  id            String      @id @default(cuid())
+  slug          String      @unique
+  title         String
+  synopsis      String
+  coverUrl      String?
+  coverSeed     Int         @default(0)
+  genre         String
+  tags          String[]
+  ageRating     AgeRating   @default(ALL)
+  status        StoryStatus @default(ONGOING)
+  visibility    Visibility  @default(DRAFT)
+  waitFreeHours Int?
+  views         Int         @default(0)
+  authorId      String
+  author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lastChapterAt DateTime?
+
+  chapters   Chapter[]
+  library    LibraryItem[]
+  reviews    Review[]
+  listItems  ReadingListItem[]
+  likes      StoryLike[]
+  waitTimers WaitFreeTimer[]
+  reads      ChapterRead[]
+  @@index([visibility, lastChapterAt])
+}
+
+model Chapter {
+  id          String        @id @default(cuid())
+  storyId     String
+  story       Story         @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  number      Int
+  title       String
+  contentJson Json
+  paragraphs  Json
+  wordCount   Int           @default(0)
+  price       Int           @default(0)
+  status      ChapterStatus @default(DRAFT)
+  publishAt   DateTime?
+  publishedAt DateTime?
+  views       Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  unlocks  Unlock[]
+  comments Comment[]
+  likes    ChapterLike[]
+  reads    ChapterRead[]
+  @@unique([storyId, number])
+}
+
+model Unlock {
+  id        String     @id @default(cuid())
+  userId    String
+  chapterId String
+  kind      UnlockKind
+  coins     Int        @default(0)
+  expiresAt DateTime?
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter   Chapter    @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  @@index([userId, chapterId])
+}
+
+model WaitFreeTimer {
+  userId          String
+  storyId         String
+  nextAvailableAt DateTime
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story           Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  @@id([userId, storyId])
+}
+
+model LedgerEntry {
+  id           String     @id @default(cuid())
+  userId       String
+  account      Account
+  type         LedgerType
+  amount       Int
+  balanceAfter Int
+  refId        String?
+  note         String?
+  createdAt    DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, createdAt])
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  userId      String
+  provider    String
+  packageId   String
+  amountVnd   Int
+  coins       Int
+  status      PaymentStatus @default(PENDING)
+  providerRef String?
+  createdAt   DateTime      @default(now())
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PayoutRequest {
+  id        String       @id @default(cuid())
+  userId    String
+  coins     Int
+  amountVnd Int
+  method    String
+  account   String
+  status    PayoutStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LibraryItem {
+  userId  String
+  storyId String
+  addedAt DateTime @default(now())
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story   Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  @@id([userId, storyId])
+}
+
+model ReadingProgress {
+  userId    String
+  storyId   String
+  chapterId String
+  chapterNo Int
+  paragraph Int      @default(0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@id([userId, storyId])
+}
+
+model ChapterRead {
+  id           String   @id @default(cuid())
+  storyId      String
+  chapterId    String
+  userId       String?
+  maxParagraph Int      @default(0)
+  completed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  story        Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  chapter      Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  @@index([storyId, createdAt])
+  @@index([chapterId])
+}
+
+model Comment {
+  id        String    @id @default(cuid())
+  chapterId String
+  userId    String
+  paragraph Int?
+  body      String
+  parentId  String?
+  hidden    Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  chapter   Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([chapterId, paragraph])
+}
+
+model ChapterLike {
+  userId    String
+  chapterId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chapter   Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  @@id([userId, chapterId])
+}
+
+model StoryLike {
+  userId    String
+  storyId   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  @@id([userId, storyId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  storyId   String
+  rating    Int
+  body      String
+  hidden    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  @@unique([userId, storyId])
+}
+
+model ReadingList {
+  id          String            @id @default(cuid())
+  ownerId     String
+  name        String
+  description String            @default("")
+  isPublic    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  owner       User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  items       ReadingListItem[]
+}
+
+model ReadingListItem {
+  listId  String
+  storyId String
+  addedAt DateTime    @default(now())
+  list    ReadingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  story   Story       @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  @@id([listId, storyId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  link      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, read])
+}
+
+model Report {
+  id         String       @id @default(cuid())
+  reporterId String
+  targetType String
+  targetId   String
+  reason     String
+  detail     String       @default("")
+  status     ReportStatus @default(OPEN)
+  createdAt  DateTime     @default(now())
+  reporter   User         @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+}
