@@ -28,3 +28,4 @@ mobile/ios/Flutter/flutter_export_environment.sh
 *.apk
 *.aab
 *.keystore
+mobile/test_shots/missing.txt

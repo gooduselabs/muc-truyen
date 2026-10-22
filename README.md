@@ -26,26 +26,84 @@ Mực là mực viết, là nét bút lông trên giấy dó, và cũng là ánh
 
 ## 📸 Ảnh chụp
 
-| Sáng · giấy dó | Đêm · đèn lồng |
-|---|---|
-| <img src="docs/screens/web-home-light.png" /> | <img src="docs/screens/web-story-dark.png" /> |
-| <img src="docs/screens/web-reader-sepia.png" /> | <img src="docs/screens/web-reader-dark.png" /> |
-| <img src="docs/screens/web-reader-locked.png" /> | <img src="docs/screens/web-studio-editor.png" /> |
+> Tất cả ảnh đều là ảnh chụp thật từ mã nguồn trong repo với dữ liệu seed (`backend/prisma/seed.ts`). Bấm vào ảnh để xem cỡ đầy đủ.
 
-**Bảng quản trị**
+- [📱 Mobile (Flutter)](#-mobile-flutter)
+- [🌐 Web · độc giả](#-web--độc-giả)
+- [✍️ Author studio](#️-author-studio)
+- [🛡️ Admin](#️-admin)
 
-| Tổng quan KPI | Trang chủ & banner | Gói xu & khuyến mãi |
+### 📱 Mobile (Flutter)
+
+| Splash | Trang chủ (khách) | Trang chủ (thành viên) | Trang chủ · đêm |
+|---|---|---|---|
+| <a href="docs/screens/mobile-splash-light.png"><img src="docs/screens/mobile-splash-light.png" width="180" alt="Splash"/></a> | <a href="docs/screens/mobile-home-light.png"><img src="docs/screens/mobile-home-light.png" width="180" alt="Trang chủ (khách)"/></a> | <a href="docs/screens/mobile-home-member-light.png"><img src="docs/screens/mobile-home-member-light.png" width="180" alt="Trang chủ (thành viên)"/></a> | <a href="docs/screens/mobile-home-member-dark.png"><img src="docs/screens/mobile-home-member-dark.png" width="180" alt="Trang chủ · đêm"/></a> |
+| Khám phá · BXH | Tìm kiếm | Thể loại | Khám phá · đêm |
+| <a href="docs/screens/mobile-discover-light.png"><img src="docs/screens/mobile-discover-light.png" width="180" alt="Khám phá · BXH"/></a> | <a href="docs/screens/mobile-search-light.png"><img src="docs/screens/mobile-search-light.png" width="180" alt="Tìm kiếm"/></a> | <a href="docs/screens/mobile-genre-light.png"><img src="docs/screens/mobile-genre-light.png" width="180" alt="Thể loại"/></a> | <a href="docs/screens/mobile-discover-dark.png"><img src="docs/screens/mobile-discover-dark.png" width="180" alt="Khám phá · đêm"/></a> |
+| Chi tiết truyện | Truyện · đêm | Mục lục & đánh giá | Ủng hộ tác giả |
+| <a href="docs/screens/mobile-story-light.png"><img src="docs/screens/mobile-story-light.png" width="180" alt="Chi tiết truyện"/></a> | <a href="docs/screens/mobile-story-dark.png"><img src="docs/screens/mobile-story-dark.png" width="180" alt="Truyện · đêm"/></a> | <a href="docs/screens/mobile-story-toc-light.png"><img src="docs/screens/mobile-story-toc-light.png" width="180" alt="Mục lục & đánh giá"/></a> | <a href="docs/screens/mobile-story-tip-light.png"><img src="docs/screens/mobile-story-tip-light.png" width="180" alt="Ủng hộ tác giả"/></a> |
+| Trình đọc · sáng | Trình đọc · sepia | Trình đọc · đêm | Cuối chương |
+| <a href="docs/screens/mobile-reader-light.png"><img src="docs/screens/mobile-reader-light.png" width="180" alt="Trình đọc · sáng"/></a> | <a href="docs/screens/mobile-reader-sepia-light.png"><img src="docs/screens/mobile-reader-sepia-light.png" width="180" alt="Trình đọc · sepia"/></a> | <a href="docs/screens/mobile-reader-dark.png"><img src="docs/screens/mobile-reader-dark.png" width="180" alt="Trình đọc · đêm"/></a> | <a href="docs/screens/mobile-reader-end-light.png"><img src="docs/screens/mobile-reader-end-light.png" width="180" alt="Cuối chương"/></a> |
+| Cài đặt đọc | Cài đặt đọc · đêm | Bình luận đoạn | Bình luận · đêm |
+| <a href="docs/screens/mobile-reader-settings-light.png"><img src="docs/screens/mobile-reader-settings-light.png" width="180" alt="Cài đặt đọc"/></a> | <a href="docs/screens/mobile-reader-settings-dark.png"><img src="docs/screens/mobile-reader-settings-dark.png" width="180" alt="Cài đặt đọc · đêm"/></a> | <a href="docs/screens/mobile-reader-comments-light.png"><img src="docs/screens/mobile-reader-comments-light.png" width="180" alt="Bình luận đoạn"/></a> | <a href="docs/screens/mobile-reader-comments-dark.png"><img src="docs/screens/mobile-reader-comments-dark.png" width="180" alt="Bình luận · đêm"/></a> |
+| Chương khoá (khách) | Mở khoá: chờ / thuê / mua | Mở khoá · đêm | Ví xu |
+| <a href="docs/screens/mobile-locked-light.png"><img src="docs/screens/mobile-locked-light.png" width="180" alt="Chương khoá (khách)"/></a> | <a href="docs/screens/mobile-unlock-options-light.png"><img src="docs/screens/mobile-unlock-options-light.png" width="180" alt="Mở khoá: chờ / thuê / mua"/></a> | <a href="docs/screens/mobile-unlock-options-dark.png"><img src="docs/screens/mobile-unlock-options-dark.png" width="180" alt="Mở khoá · đêm"/></a> | <a href="docs/screens/mobile-wallet-light.png"><img src="docs/screens/mobile-wallet-light.png" width="180" alt="Ví xu"/></a> |
+| Ví xu · đêm | Tủ sách | Tủ sách · đêm | Tủ sách (khách) |
+| <a href="docs/screens/mobile-wallet-dark.png"><img src="docs/screens/mobile-wallet-dark.png" width="180" alt="Ví xu · đêm"/></a> | <a href="docs/screens/mobile-library-light.png"><img src="docs/screens/mobile-library-light.png" width="180" alt="Tủ sách"/></a> | <a href="docs/screens/mobile-library-dark.png"><img src="docs/screens/mobile-library-dark.png" width="180" alt="Tủ sách · đêm"/></a> | <a href="docs/screens/mobile-library-guest-light.png"><img src="docs/screens/mobile-library-guest-light.png" width="180" alt="Tủ sách (khách)"/></a> |
+| Thông báo | Thông báo · đêm | Tài khoản | Tài khoản (khách) |
+| <a href="docs/screens/mobile-notifications-light.png"><img src="docs/screens/mobile-notifications-light.png" width="180" alt="Thông báo"/></a> | <a href="docs/screens/mobile-notifications-dark.png"><img src="docs/screens/mobile-notifications-dark.png" width="180" alt="Thông báo · đêm"/></a> | <a href="docs/screens/mobile-account-light.png"><img src="docs/screens/mobile-account-light.png" width="180" alt="Tài khoản"/></a> | <a href="docs/screens/mobile-account-guest-light.png"><img src="docs/screens/mobile-account-guest-light.png" width="180" alt="Tài khoản (khách)"/></a> |
+| Cài đặt | Cài đặt · đêm | Đăng nhập | Đăng ký |
+| <a href="docs/screens/mobile-settings-light.png"><img src="docs/screens/mobile-settings-light.png" width="180" alt="Cài đặt"/></a> | <a href="docs/screens/mobile-settings-dark.png"><img src="docs/screens/mobile-settings-dark.png" width="180" alt="Cài đặt · đêm"/></a> | <a href="docs/screens/mobile-login-light.png"><img src="docs/screens/mobile-login-light.png" width="180" alt="Đăng nhập"/></a> | <a href="docs/screens/mobile-register-light.png"><img src="docs/screens/mobile-register-light.png" width="180" alt="Đăng ký"/></a> |
+
+> Ảnh app được dựng bằng widget test với font thật và phản hồi API thật đã ghi lại từ backend seed (`mobile/test_shots/all_test.dart`, ghi API bằng `tools/record_api.mjs`). Ảnh chụp từ APK release trên emulator: [`emu-home-light.png`](docs/screens/emu-home-light.png).
+
+### 🌐 Web · độc giả
+
+| Trang chủ | Trang chủ · đêm | Khám phá |
 |---|---|---|
-| <img src="docs/screens/web-admin-dashboard-dark.png" /> | <img src="docs/screens/web-admin-homepage.png" /> | <img src="docs/screens/web-admin-packages.png" /> |
-| <img src="docs/screens/web-admin-dashboard-light.png" /> | <img src="docs/screens/web-admin-stories.png" /> | <img src="docs/screens/web-admin-audit.png" /> |
+| <a href="docs/screens/web-home-light.png"><img src="docs/screens/web-home-light.png" alt="Trang chủ"/></a> | <a href="docs/screens/web-home-dark.png"><img src="docs/screens/web-home-dark.png" alt="Trang chủ · đêm"/></a> | <a href="docs/screens/web-discover.png"><img src="docs/screens/web-discover.png" alt="Khám phá"/></a> |
+| Bảng xếp hạng | Chi tiết truyện | Truyện · đêm |
+| <a href="docs/screens/web-rankings.png"><img src="docs/screens/web-rankings.png" alt="Bảng xếp hạng"/></a> | <a href="docs/screens/web-story-light.png"><img src="docs/screens/web-story-light.png" alt="Chi tiết truyện"/></a> | <a href="docs/screens/web-story-dark.png"><img src="docs/screens/web-story-dark.png" alt="Truyện · đêm"/></a> |
+| Trình đọc · sepia | Trình đọc · đêm | Bình luận đoạn |
+| <a href="docs/screens/web-reader-sepia.png"><img src="docs/screens/web-reader-sepia.png" alt="Trình đọc · sepia"/></a> | <a href="docs/screens/web-reader-dark.png"><img src="docs/screens/web-reader-dark.png" alt="Trình đọc · đêm"/></a> | <a href="docs/screens/web-reader-comments.png"><img src="docs/screens/web-reader-comments.png" alt="Bình luận đoạn"/></a> |
+| Chương khoá | Bảng tin | Thông báo |
+| <a href="docs/screens/web-reader-locked.png"><img src="docs/screens/web-reader-locked.png" alt="Chương khoá"/></a> | <a href="docs/screens/web-feed.png"><img src="docs/screens/web-feed.png" alt="Bảng tin"/></a> | <a href="docs/screens/web-notifications.png"><img src="docs/screens/web-notifications.png" alt="Thông báo"/></a> |
+| Tủ sách | Tủ sách · đêm | Ví xu |
+| <a href="docs/screens/web-library-light.png"><img src="docs/screens/web-library-light.png" alt="Tủ sách"/></a> | <a href="docs/screens/web-library-dark.png"><img src="docs/screens/web-library-dark.png" alt="Tủ sách · đêm"/></a> | <a href="docs/screens/web-wallet.png"><img src="docs/screens/web-wallet.png" alt="Ví xu"/></a> |
+| Trang tác giả | Hồ sơ độc giả | Đăng nhập |
+| <a href="docs/screens/web-author-profile.png"><img src="docs/screens/web-author-profile.png" alt="Trang tác giả"/></a> | <a href="docs/screens/web-reader-profile.png"><img src="docs/screens/web-reader-profile.png" alt="Hồ sơ độc giả"/></a> | <a href="docs/screens/web-login.png"><img src="docs/screens/web-login.png" alt="Đăng nhập"/></a> |
+| Đăng ký |   |   |
+| <a href="docs/screens/web-register.png"><img src="docs/screens/web-register.png" alt="Đăng ký"/></a> |   |   |
 
-**App Android (Flutter)**
+**Web trên điện thoại (390×844)**
 
-| Trang chủ sáng | Trang chủ đêm | Truyện | Trình đọc | Chương khoá |
-|---|---|---|---|---|
-| <img src="docs/screens/mobile-home-light.png" width="160"/> | <img src="docs/screens/mobile-home-dark.png" width="160"/> | <img src="docs/screens/mobile-story-dark.png" width="160"/> | <img src="docs/screens/mobile-reader-light.png" width="160"/> | <img src="docs/screens/mobile-locked-dark.png" width="160"/> |
+| Trang chủ | Truyện | Trình đọc | Chương khoá |
+|---|---|---|---|
+| <a href="docs/screens/webm-home.png"><img src="docs/screens/webm-home.png" width="180" alt="Trang chủ"/></a> | <a href="docs/screens/webm-story.png"><img src="docs/screens/webm-story.png" width="180" alt="Truyện"/></a> | <a href="docs/screens/webm-reader-sepia.png"><img src="docs/screens/webm-reader-sepia.png" width="180" alt="Trình đọc"/></a> | <a href="docs/screens/webm-locked.png"><img src="docs/screens/webm-locked.png" width="180" alt="Chương khoá"/></a> |
+| Ví xu | Bảng tin | Tác giả | Trang chủ · đêm |
+| <a href="docs/screens/webm-wallet.png"><img src="docs/screens/webm-wallet.png" width="180" alt="Ví xu"/></a> | <a href="docs/screens/webm-feed.png"><img src="docs/screens/webm-feed.png" width="180" alt="Bảng tin"/></a> | <a href="docs/screens/webm-author-profile.png"><img src="docs/screens/webm-author-profile.png" width="180" alt="Tác giả"/></a> | <a href="docs/screens/web-mobile-dark.png"><img src="docs/screens/web-mobile-dark.png" width="180" alt="Trang chủ · đêm"/></a> |
 
-> Ảnh app được dựng bằng widget test với font thật (`flutter test test_shots/shots_test.dart`). Ảnh chụp từ APK release trên emulator nằm ở [`docs/screens/emu-home-light.png`](docs/screens/emu-home-light.png).
+### ✍️ Author studio
+
+| Truyện của tôi | Truyện của tôi · đêm | Sửa truyện & mục lục |
+|---|---|---|
+| <a href="docs/screens/web-studio-dashboard.png"><img src="docs/screens/web-studio-dashboard.png" alt="Truyện của tôi"/></a> | <a href="docs/screens/web-studio-dashboard-dark.png"><img src="docs/screens/web-studio-dashboard-dark.png" alt="Truyện của tôi · đêm"/></a> | <a href="docs/screens/web-studio-story.png"><img src="docs/screens/web-studio-story.png" alt="Sửa truyện & mục lục"/></a> |
+| Trình soạn chương | Thống kê | Thu nhập |
+| <a href="docs/screens/web-studio-editor.png"><img src="docs/screens/web-studio-editor.png" alt="Trình soạn chương"/></a> | <a href="docs/screens/web-studio-analytics.png"><img src="docs/screens/web-studio-analytics.png" alt="Thống kê"/></a> | <a href="docs/screens/web-studio-earnings.png"><img src="docs/screens/web-studio-earnings.png" alt="Thu nhập"/></a> |
+
+### 🛡️ Admin
+
+| Tổng quan · đêm | Tổng quan | Duyệt truyện |
+|---|---|---|
+| <a href="docs/screens/web-admin-dashboard-dark.png"><img src="docs/screens/web-admin-dashboard-dark.png" alt="Tổng quan · đêm"/></a> | <a href="docs/screens/web-admin-dashboard-light.png"><img src="docs/screens/web-admin-dashboard-light.png" alt="Tổng quan"/></a> | <a href="docs/screens/web-admin-stories.png"><img src="docs/screens/web-admin-stories.png" alt="Duyệt truyện"/></a> |
+| Trang chủ & banner | Xếp hạng | Thể loại & thẻ |
+| <a href="docs/screens/web-admin-homepage.png"><img src="docs/screens/web-admin-homepage.png" alt="Trang chủ & banner"/></a> | <a href="docs/screens/web-admin-xep-hang.png"><img src="docs/screens/web-admin-xep-hang.png" alt="Xếp hạng"/></a> | <a href="docs/screens/web-admin-the-loai.png"><img src="docs/screens/web-admin-the-loai.png" alt="Thể loại & thẻ"/></a> |
+| Người dùng | Báo cáo | Chi trả |
+| <a href="docs/screens/web-admin-nguoi-dung.png"><img src="docs/screens/web-admin-nguoi-dung.png" alt="Người dùng"/></a> | <a href="docs/screens/web-admin-bao-cao.png"><img src="docs/screens/web-admin-bao-cao.png" alt="Báo cáo"/></a> | <a href="docs/screens/web-admin-chi-tra.png"><img src="docs/screens/web-admin-chi-tra.png" alt="Chi trả"/></a> |
+| Gói xu & khuyến mãi | Thông báo hệ thống | Nhật ký |
+| <a href="docs/screens/web-admin-packages.png"><img src="docs/screens/web-admin-packages.png" alt="Gói xu & khuyến mãi"/></a> | <a href="docs/screens/web-admin-thong-bao.png"><img src="docs/screens/web-admin-thong-bao.png" alt="Thông báo hệ thống"/></a> | <a href="docs/screens/web-admin-audit.png"><img src="docs/screens/web-admin-audit.png" alt="Nhật ký"/></a> |
+
+> Ảnh web chụp bằng Playwright (Chrome headless) từ web + backend chạy local: `node tools/shots.mjs`, `node tools/shots2.mjs`.
 
 ## ✨ Tính năng
 
